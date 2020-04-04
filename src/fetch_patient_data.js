@@ -1,7 +1,7 @@
 const drive = require('drive-db')
 const _ = require('lodash')
 
-const SHEET = '19U_Y8jAIwEp7csYHhkm745b33kcfdrKROh4DeQkcaTI'
+const SHEET = '1wsLOccSvm78O4BHIXv3qaAt_jYOvZmLR9_mJOslTdtU'
 const SHEET_PATIENT_DATA_TAB = 1
 
 // Post processes the data to normalize field names etc.
@@ -11,7 +11,6 @@ const postProcessData = (rawData) => {
 
   // Check validity of the row.
   const isValidRow = row => {
-    if (!row.detectedPrefecture) { return false }
     if (!row.dateAnnounced) { return false }
     return true
   }
@@ -20,65 +19,40 @@ const postProcessData = (rawData) => {
     const normalizeNumber = n => {
       if (isNaN(parseInt(n))) { return -1 }
       return parseInt(n)
-    }
-
-    const unspecifiedToBlank = v => {
-      if (v == 'Unspecified') return ''
-      return v
-    }
-
-    let transformedRow = {
-      'patientId': normalizeNumber(row.patientnumber),
-      'dateAnnounced': row.dateannounced,
-      'ageBracket': normalizeNumber(row.agebracket),
-      'gender': unspecifiedToBlank(row.gender),
-      'residence': row.residencecitydistrict,
-      'detectedCityTown': row.detectedcity,
-      'detectedPrefecture': row.detecteddistrict,
-      'patientStatus': row.status,
-      'notes': row.notes,
-      'knownCluster': row.knowncluster,
-      'relatedPatients': row.relatedPatients,
-      'mhlwPatientNumber': row.mhlworigpatientnumber,
-      'prefecturePatientNumber': row.prefecturepatientnumber,
-      'cityPrefectureNumber': row.citypatientnumber,
-      'prefectureSourceURL': row.prefectureurlauto,
-      'charterFlightPassenger': row.charterflightpassenger,
-      'cruisePassengerDisembarked': row.cruisepassengerdisembarked,
-      'cruisePassengerInfectedOnboard': row.cruisepassengerinfectedonboard,
-      'cruiseQuarantineOfficer': row.cruisequarantineofficer,
-      'detectedAtPort': row.detectedatport,
-      'sourceURL': row.sources,
-    }
-
-    // filter empty cells.
-    transformedRow = _.pickBy(transformedRow, (v, k) => {
-      if (v == '') {
-        return false
-      }
-      return true
-    })
-
-    // convert boolean fields
-    let booleanFields = [ 
-      'charterFlightPassenger', 
-      'cruisePassengerDisembarked', 
-      'cruisePassengerInfectedOnboard',
-      'cruiseQuarantineOfficer',
-      'detectedAtPort'
-    ]
-    transformedRow = _.mapValues(transformedRow, (v, k) => {
-      if (booleanFields.indexOf(k) != -1) {
-        return (v == '1')
-      }
-      return v
-    })
-
-    // Add a field to indicate whether we count as patient or not.
-    transformedRow.confirmedPatient = (transformedRow.patientId > 0)
-
-    return transformedRow
   }
+
+  const unspecifiedToBlank = v => {
+    if (v == 'Unspecified') return ''
+    return v
+  }
+
+  let transformedRow = {
+    'patientId': normalizeNumber(row.patientnumber),
+    'statepatientId': row.statepatientnumber,
+    'dateAnnounced': row.dateannounced,
+    'age': normalizeNumber(row.age),
+    'gender': unspecifiedToBlank(row.gender),
+    'detectedcity': row.detectedcity,
+    'detecteddistrict': row.detecteddistrict,
+    'patientStatus': row.currentstatus,
+    'notes': row.notes,
+    'sourceURL': row.source_1,
+    'transmissionType': row.typeoftransmission
+  }
+
+  // filter empty cells.
+  transformedRow = _.pickBy(transformedRow, (v, k) => {
+    if (v == '') {
+      return false
+    }
+    return true
+  })
+
+  // Add a field to indicate whether we count as patient or not.
+  transformedRow.confirmedPatient = (transformedRow.patientId > 0)
+
+  return transformedRow
+}
   
   const rows = _.filter(_.map(rawData, transformRow), isValidRow)
   return rows

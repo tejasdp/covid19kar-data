@@ -127,14 +127,12 @@ const generatePrefectureSummary = (patients, manualPrefectureData) => {
   let prefectureSummary = {}
 
   for (let patient of patients) {
-    let prefectureName = patient.detectedPrefecture
-    let cityName = patient.detectedCityTown
+    let prefectureName = patient.detecteddistrict
+    let cityName = patient.detectedcity
 
     if (!prefectureSummary[prefectureName]) {
       prefectureSummary[prefectureName] = {
         confirmed: 0,
-        cruisePassenger: 0,
-        cruiseWorker: 0,
         deaths: 0,
         patients: [],
         confirmedByCity: {}
@@ -150,13 +148,6 @@ const generatePrefectureSummary = (patients, manualPrefectureData) => {
           prefectureSummary[prefectureName].confirmedByCity[cityName] = 1        
         }
       }
-
-      if (patient.cruisePassengerDisembarked == 1) {
-        prefectureSummary[prefectureName].cruisePassenger += 1
-      }
-      if (patient.cruiseQuarantineOfficer == 1) {
-        prefectureSummary[prefectureName].cruiseWorker += 1
-      }
     }
 
     if (patient.patientStatus == 'Deceased') {
@@ -168,7 +159,7 @@ const generatePrefectureSummary = (patients, manualPrefectureData) => {
 
   for (let prefectureName of _.keys(prefectureSummary)) {
     let prefecture = prefectureSummary[prefectureName]
-    const firstDay = moment('2020-01-31')
+    const firstDay = moment('2020-03-09')
     const dailyConfirmed = generateDailyStatsForPrefecture(prefecture.patients, firstDay)
     if (dailyConfirmed && dailyConfirmed.length) {
       prefecture.dailyConfirmedCount = dailyConfirmed
